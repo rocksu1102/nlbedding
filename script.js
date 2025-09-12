@@ -5,14 +5,21 @@ const API_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=
 
 // Các đối tượng DOM
 const productList = document.getElementById('product-list');
+const paginationContainer = document.getElementById('pagination-container');
+const searchInput = document.getElementById('search-input');
 const contactModal = document.getElementById('contact-modal');
 const closeButton = document.querySelector('.close-button');
 const priceFilters = document.querySelectorAll('input[name="price"]');
 const colorFilterContainer = document.querySelector('[data-filter-type="color"]');
 let colorFilters = []; // Sẽ được cập nhật sau khi tải dữ liệu
 
+// Cấu hình phân trang
+let currentPage = 1;
+const productsPerPage = 9;
+
 let slideIndex = 0;
 let allProducts = []; // Lưu trữ tất cả sản phẩm
+let currentFilteredProducts = []; // Lưu trữ sản phẩm sau khi lọc để phân trang
 
 // Hàm định dạng tiền tệ
 function formatCurrency(number) {
@@ -20,15 +27,22 @@ function formatCurrency(number) {
     return number.toLocaleString('vi-VN', { style: 'currency', currency: 'VND' });
 }
 
-// Hàm hiển thị sản phẩm
-function renderProducts(products) {
+// Hàm hiển thị sản phẩm cho trang hiện tại
+function displayCurrentPage() {
     productList.innerHTML = '';
-    if (products.length === 0) {
+    paginationContainer.innerHTML = '';
+
+    // Luôn sử dụng currentFilteredProducts để hiển thị và phân trang
+    if (currentFilteredProducts.length === 0) {
         productList.innerHTML = '<p>Không có sản phẩm nào phù hợp.</p>';
         return;
     }
 
-    products.forEach(product => {
+    const startIndex = (currentPage - 1) * productsPerPage;
+    const endIndex = startIndex + productsPerPage;
+    const paginatedProducts = currentFilteredProducts.slice(startIndex, endIndex);
+
+    paginatedProducts.forEach(product => {
         const productCard = document.createElement('div');
         productCard.className = 'product-card';
 
@@ -59,6 +73,67 @@ function renderProducts(products) {
 
         productList.appendChild(productCard);
     });
+
+    setupPagination();
+}
+
+// Hàm tạo các nút phân trang
+function setupPagination() {
+    const pageCount = Math.ceil(currentFilteredProducts.length / productsPerPage);
+    if (pageCount <= 1) return;
+
+    for (let i = 1; i <= pageCount; i++) {
+        const btn = document.createElement('button');
+        btn.innerText = i;
+        btn.classList.add('pagination-button');
+        if (i === currentPage) { // Đánh dấu trang hiện tại là active
+            btn.classList.add('active');
+        }
+        btn.addEventListener('click', () => {
+            currentPage = i;
+            displayCurrentPage();
+            // Cuộn lên đầu danh sách sản phẩm
+            document.querySelector('.main-content').scrollIntoView({ behavior: 'smooth' });
+        });
+        paginationContainer.appendChild(btn);
+    }
+}
+
+// Hàm lọc sản phẩm
+function filterProducts() {
+    let tempFilteredProducts = [...allProducts];
+
+    // Lọc theo từ khóa tìm kiếm
+    const searchTerm = searchInput.value.toLowerCase().trim();
+    if (searchTerm) {
+        tempFilteredProducts = tempFilteredProducts.filter(p => 
+            p.ten_san_pham.toLowerCase().includes(searchTerm)
+        );
+    }
+    // Lọc theo giá
+    const selectedPrices = [...priceFilters].filter(f => f.checked).map(f => f.value);
+    if (selectedPrices.length > 0) {
+        tempFilteredProducts = tempFilteredProducts.filter(p => {
+            if (!p.gia) return false;
+            return selectedPrices.some(priceRange => {
+                const [min, max] = priceRange.split('-').map(Number);
+                 if(max){
+                     return p.gia >= min && p.gia <= max;
+                 }
+                 return p.gia >= min;
+            });
+        });
+    }
+
+    // Lọc theo màu sắc
+    const selectedColors = [...colorFilters].filter(f => f.checked).map(f => f.value);
+    if (selectedColors.length > 0) {
+        tempFilteredProducts = tempFilteredProducts.filter(p => selectedColors.includes(p.mau_sac));
+    }
+
+    currentFilteredProducts = tempFilteredProducts; // Cập nhật danh sách sản phẩm đã lọc
+    currentPage = 1; // Reset về trang 1 mỗi khi có bộ lọc mới
+    displayCurrentPage(); // Hiển thị trang hiện tại của kết quả đã lọc
 }
 
 // Hàm tạo các tùy chọn lọc màu sắc
@@ -83,36 +158,6 @@ function populateColorFilters() {
     colorFilters.forEach(filter => filter.addEventListener('change', filterProducts));
 }
 
-
-// Hàm lọc sản phẩm
-function filterProducts() {
-    let filteredProducts = [...allProducts];
-
-    // Lọc theo giá
-    const selectedPrices = [...priceFilters].filter(f => f.checked).map(f => f.value);
-    if (selectedPrices.length > 0) {
-        filteredProducts = filteredProducts.filter(p => {
-            if (!p.gia) return false;
-            return selectedPrices.some(priceRange => {
-                const [min, max] = priceRange.split('-').map(Number);
-                 if(max){
-                     return p.gia >= min && p.gia <= max;
-                 }
-                 return p.gia >= min;
-            });
-        });
-    }
-
-    // Lọc theo màu sắc
-    const selectedColors = [...colorFilters].filter(f => f.checked).map(f => f.value);
-    if (selectedColors.length > 0) {
-        filteredProducts = filteredProducts.filter(p => selectedColors.includes(p.mau_sac));
-    }
-
-    renderProducts(filteredProducts);
-}
-
-
 // Hàm chính để lấy và hiển thị sản phẩm
 async function fetchProducts() {
     try {
@@ -136,7 +181,8 @@ async function fetchProducts() {
         }));
         
         populateColorFilters(); // Tạo bộ lọc màu sắc động
-        renderProducts(allProducts); // Hiển thị tất cả sản phẩm ban đầu
+        currentFilteredProducts = [...allProducts]; // Gán danh sách sản phẩm ban đầu
+        displayCurrentPage(); // Hiển thị trang đầu tiên
 
     } catch (error) {
         console.error('Lỗi khi tải dữ liệu sản phẩm:', error);
@@ -182,6 +228,7 @@ function showSlides() {
 
 // Sự kiện
 priceFilters.forEach(filter => filter.addEventListener('change', filterProducts));
+searchInput.addEventListener('input', filterProducts);
 
 closeButton.addEventListener('click', () => contactModal.style.display = 'none');
 window.addEventListener('click', (event) => {

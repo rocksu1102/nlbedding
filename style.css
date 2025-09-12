@@ -140,6 +140,27 @@ body {
     border-radius: 4px;
 }
 
+/* --- Search Bar --- */
+.search-container {
+    position: relative;
+    display: flex;
+    align-items: center;
+    width: 300px; /* Có thể điều chỉnh */
+}
+
+.search-container i {
+    position: absolute;
+    left: 10px;
+    color: #aaa;
+}
+
+#search-input {
+    width: 100%;
+    padding: 0.5rem 0.5rem 0.5rem 2rem; /* Thêm padding bên trái cho icon */
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+}
+
 /* --- Lưới sản phẩm --- */
 .product-grid {
     display: grid;

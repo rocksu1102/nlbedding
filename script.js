@@ -17,8 +17,8 @@ const modalProductPrice = document.getElementById('modal-product-price');
 const modalProductOriginalPrice = document.getElementById('modal-product-original-price');
 
 const priceFilters = document.querySelectorAll('input[name="price"]');
-const colorFilterContainer = document.querySelector('[data-filter-type="color"]');
-let colorFilters = []; // Sẽ được cập nhật sau khi tải dữ liệu
+const categoryFilterContainer = document.querySelector('[data-filter-type="category"]');
+let categoryFilters = []; // Sẽ được cập nhật sau khi tải dữ liệu
 
 // Cấu hình phân trang
 let currentPage = 1;
@@ -156,9 +156,9 @@ function filterProducts() {
     }
 
     // Lọc theo màu sắc
-    const selectedColors = [...colorFilters].filter(f => f.checked).map(f => f.value);
-    if (selectedColors.length > 0) {
-        tempFilteredProducts = tempFilteredProducts.filter(p => selectedColors.includes(p.mau_sac));
+    const selectedCategories = [...categoryFilters].filter(f => f.checked).map(f => f.value);
+    if (selectedCategories.length > 0) {
+        tempFilteredProducts = tempFilteredProducts.filter(p => selectedCategories.includes(p.danh_muc));
     }
 
     currentFilteredProducts = tempFilteredProducts; // Cập nhật danh sách sản phẩm đã lọc
@@ -166,26 +166,26 @@ function filterProducts() {
     displayCurrentPage(); // Hiển thị trang hiện tại của kết quả đã lọc
 }
 
-// Hàm tạo các tùy chọn lọc màu sắc
-function populateColorFilters() {
-    const colors = [...new Set(allProducts.map(p => p.mau_sac).filter(Boolean))]; // Lấy các màu duy nhất
+// Hàm tạo các tùy chọn lọc danh mục
+function populateCategoryFilters() {
+    const categories = [...new Set(allProducts.map(p => p.danh_muc).filter(Boolean))]; // Lấy các danh mục duy nhất
 
-    colorFilterContainer.innerHTML = ''; // Xóa các tùy chọn cũ
-    colors.forEach(color => {
+    categoryFilterContainer.innerHTML = ''; // Xóa các tùy chọn cũ
+    categories.forEach(category => {
         const label = document.createElement('label');
         const checkbox = document.createElement('input');
         checkbox.type = 'checkbox';
-        checkbox.name = 'color';
-        checkbox.value = color;
+        checkbox.name = 'category';
+        checkbox.value = category;
 
         label.appendChild(checkbox);
-        label.appendChild(document.createTextNode(` ${color}`));
-        colorFilterContainer.appendChild(label);
+        label.appendChild(document.createTextNode(` ${category}`));
+        categoryFilterContainer.appendChild(label);
     });
 
-    // Cập nhật lại danh sách các checkbox màu và thêm sự kiện
-    colorFilters = document.querySelectorAll('input[name="color"]');
-    colorFilters.forEach(filter => filter.addEventListener('change', filterProducts));
+    // Cập nhật lại danh sách các checkbox danh mục và thêm sự kiện
+    categoryFilters = document.querySelectorAll('input[name="category"]');
+    categoryFilters.forEach(filter => filter.addEventListener('change', filterProducts));
 }
 
 // Hàm chính để lấy và hiển thị sản phẩm
@@ -210,7 +210,7 @@ async function fetchProducts() {
             kich_thuoc: row.c[8]?.v
         }));
         
-        populateColorFilters(); // Tạo bộ lọc màu sắc động
+        populateCategoryFilters(); // Tạo bộ lọc danh mục động
         currentFilteredProducts = [...allProducts]; // Gán danh sách sản phẩm ban đầu
         displayCurrentPage(); // Hiển thị trang đầu tiên
 

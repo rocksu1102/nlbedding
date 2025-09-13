@@ -9,6 +9,13 @@ const paginationContainer = document.getElementById('pagination-container');
 const searchInput = document.getElementById('search-input');
 const contactModal = document.getElementById('contact-modal');
 const closeButton = document.querySelector('.close-button');
+// Các đối tượng DOM cho modal chi tiết sản phẩm
+const modalProductName = document.getElementById('modal-product-name');
+const modalProductImage = document.getElementById('modal-product-image');
+const modalProductDescription = document.getElementById('modal-product-description');
+const modalProductPrice = document.getElementById('modal-product-price');
+const modalProductOriginalPrice = document.getElementById('modal-product-original-price');
+
 const priceFilters = document.querySelectorAll('input[name="price"]');
 const colorFilterContainer = document.querySelector('[data-filter-type="color"]');
 let colorFilters = []; // Sẽ được cập nhật sau khi tải dữ liệu
@@ -25,6 +32,29 @@ let currentFilteredProducts = []; // Lưu trữ sản phẩm sau khi lọc để
 function formatCurrency(number) {
     if (typeof number !== 'number') return number;
     return number.toLocaleString('vi-VN', { style: 'currency', currency: 'VND' });
+}
+
+// Hàm hiển thị modal chi tiết sản phẩm
+function showProductDetailModal(product) {
+    modalProductName.textContent = product.ten_san_pham;
+    // Chỉ cập nhật ảnh nếu có link hợp lệ, nếu không thì ẩn đi
+    if (product.link_hinh_anh) {
+        modalProductImage.style.backgroundImage = `url('${product.link_hinh_anh}')`;
+        modalProductImage.style.display = 'block';
+    } else {
+        modalProductImage.style.display = 'none';
+    }
+    modalProductDescription.textContent = product.mo_ta;
+    modalProductPrice.textContent = formatCurrency(product.gia);
+
+    if (product.gia_goc && product.gia_goc > product.gia) {
+        modalProductOriginalPrice.textContent = formatCurrency(product.gia_goc);
+        modalProductOriginalPrice.style.display = 'inline';
+    } else {
+        modalProductOriginalPrice.style.display = 'none';
+    }
+
+    contactModal.style.display = 'block';
 }
 
 // Hàm hiển thị sản phẩm cho trang hiện tại
@@ -54,7 +84,7 @@ function displayCurrentPage() {
 
         productCard.innerHTML = `
             <div class="product-image-container">
-                <img src="${product.link_hinh_anh}" alt="${product.ten_san_pham}">
+                <img src="${product.link_hinh_anh || 'https://via.placeholder.com/300?text=No+Image'}" alt="${product.ten_san_pham}">
                 ${discountBadge}
             </div>
             <div class="product-info">
@@ -68,7 +98,7 @@ function displayCurrentPage() {
         `;
         
         productCard.addEventListener('click', () => {
-            contactModal.style.display = 'block';
+            showProductDetailModal(product);
         });
 
         productList.appendChild(productCard);
@@ -174,7 +204,7 @@ async function fetchProducts() {
             gia: row.c[2]?.v,
             gia_goc: row.c[3]?.v,
             mo_ta: row.c[4]?.v || '',
-            link_hinh_anh: row.c[5]?.v || 'https://via.placeholder.com/300',
+            link_hinh_anh: row.c[5]?.v, // Để giá trị là null nếu không có link, sẽ xử lý lúc hiển thị
             danh_muc: row.c[6]?.v,
             mau_sac: row.c[7]?.v, // Cột H là index 7
             kich_thuoc: row.c[8]?.v

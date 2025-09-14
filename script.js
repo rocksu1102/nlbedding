@@ -16,7 +16,6 @@ const modalProductDescription = document.getElementById('modal-product-descripti
 const modalProductPrice = document.getElementById('modal-product-price');
 const modalProductOriginalPrice = document.getElementById('modal-product-original-price');
 
-const priceFilters = document.querySelectorAll('input[name="price"]');
 const categoryFilterContainer = document.querySelector('[data-filter-type="category"]');
 let categoryFilters = []; // Sẽ được cập nhật sau khi tải dữ liệu
 
@@ -140,20 +139,6 @@ function filterProducts() {
             p.ten_san_pham.toLowerCase().includes(searchTerm)
         );
     }
-    // Lọc theo giá
-    const selectedPrices = [...priceFilters].filter(f => f.checked).map(f => f.value);
-    if (selectedPrices.length > 0) {
-        tempFilteredProducts = tempFilteredProducts.filter(p => {
-            if (!p.gia) return false;
-            return selectedPrices.some(priceRange => {
-                const [min, max] = priceRange.split('-').map(Number);
-                 if(max){
-                     return p.gia >= min && p.gia <= max;
-                 }
-                 return p.gia >= min;
-            });
-        });
-    }
 
     // Lọc theo màu sắc
     const selectedCategories = [...categoryFilters].filter(f => f.checked).map(f => f.value);
@@ -257,7 +242,6 @@ function showSlides() {
 }
 
 // Sự kiện
-priceFilters.forEach(filter => filter.addEventListener('change', filterProducts));
 searchInput.addEventListener('input', filterProducts);
 
 closeButton.addEventListener('click', () => contactModal.style.display = 'none');

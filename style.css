@@ -219,6 +219,8 @@ body {
     font-size: 0.9rem;
     color: #666;
     margin: 0.5rem 0;
+    /* Ẩn mô tả trên trang chủ */
+    display: none;
 }
 
 .price-container {

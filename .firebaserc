@@ -1,6 +1,7 @@
 {
   "projects": {
-    "main": "nl-bedding"
+    "main": "nl-bedding",
+    "production": "nl-bedding"
   },
   "targets": {},
   "etags": {}
